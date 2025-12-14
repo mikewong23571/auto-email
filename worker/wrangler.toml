@@ -1,0 +1,19 @@
+name = "cloudflare-mail-cleaner"
+main = "src/index.ts"
+compatibility_date = "2024-04-01"
+
+# D1 Database Binding
+[[d1_databases]]
+binding = "DB"
+database_name = "mail_cleaner_db"
+database_id = "INSERT_DB_ID_HERE"
+
+[vars]
+# Default 30 day retention
+TTL_DAYS = 30
+# Auth token for API (Override in secrets)
+API_TOKEN = "dev_token_change_me"
+
+[observability]
+enabled = true
+head_sampling_rate = 1

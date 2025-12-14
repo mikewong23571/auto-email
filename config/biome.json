@@ -1,0 +1,53 @@
+{
+	"$schema": "https://biomejs.dev/schemas/1.9.4/schema.json",
+	"vcs": {
+		"enabled": true,
+		"clientKind": "git",
+		"useIgnoreFile": true
+	},
+	"files": {
+		"ignoreUnknown": false,
+		"ignore": [
+			"web/tsconfig.app.json",
+			"web/tsconfig.node.json",
+			"**/tsconfig.json",
+			"**/tsconfig.*.json",
+			"**/.wrangler/**",
+			"**/dist/**",
+			"**/node_modules/**"
+		]
+	},
+	"formatter": {
+		"enabled": true,
+		"indentStyle": "space",
+		"indentWidth": 2,
+		"lineEnding": "lf",
+		"lineWidth": 100,
+		"ignore": [
+			"web/tsconfig.app.json",
+			"web/tsconfig.node.json",
+			"**/tsconfig.json",
+			"**/tsconfig.*.json"
+		]
+	},
+	"organizeImports": {
+		"enabled": true
+	},
+	"linter": {
+		"enabled": true,
+		"rules": {
+			"recommended": true
+		},
+		"ignore": [
+			"web/tsconfig.app.json",
+			"web/tsconfig.node.json",
+			"**/tsconfig.json",
+			"**/tsconfig.*.json"
+		]
+	},
+	"javascript": {
+		"formatter": {
+			"quoteStyle": "double"
+		}
+	}
+}
