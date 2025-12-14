@@ -1,4 +1,4 @@
-import type { D1Database } from "@cloudflare/workers-types";
+import type { D1Database, D1Result } from "@cloudflare/workers-types";
 import type { Message, Bindings } from "../types";
 
 export const getDatabase = (env: Bindings): D1Database => {
@@ -93,9 +93,15 @@ export const deleteMessage = async (db: D1Database, id: string) => {
 	return db.prepare("DELETE FROM messages WHERE id = ?").bind(id).run();
 };
 
-export const deleteMessages = async (db: D1Database, ids: string[]) => {
+export const deleteMessages = async (
+	db: D1Database,
+	ids: string[],
+): Promise<{ changes: number }> => {
 	if (ids.length === 0) return { changes: 0 };
 	const placeholders = ids.map(() => "?").join(", ");
 	const stmt = `DELETE FROM messages WHERE id IN (${placeholders})`;
-	return db.prepare(stmt).bind(...ids).run();
+	const res: D1Result = await db.prepare(stmt).bind(...ids).run();
+	const changes =
+		typeof res.meta?.changes === "number" ? res.meta.changes : ids.length;
+	return { changes };
 };

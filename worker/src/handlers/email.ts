@@ -13,7 +13,9 @@ export const emailHandler = async (
 	ctx: ExecutionContext,
 ) => {
 	try {
-		const arrayBuffer = await readStreamToArrayBuffer(message.raw);
+		const arrayBuffer = await readStreamToArrayBuffer(
+			message.raw as ReadableStream<Uint8Array>,
+		);
 
 		const parser = new PostalMime({
 			// Guard against deeply nested MIME parts / oversized headers
