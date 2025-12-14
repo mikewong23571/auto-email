@@ -6,3 +6,6 @@ export class AppError extends Error {
 		super(message);
 	}
 }
+
+export const isAppError = (err: unknown): err is AppError =>
+	err instanceof AppError && typeof err.status === "number";

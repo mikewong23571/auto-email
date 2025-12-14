@@ -3,8 +3,8 @@ const TOKEN_KEY = "mail_cleaner_token";
 
 // Simple token management for now
 export const setToken = (token: string) =>
-	localStorage.setItem(TOKEN_KEY, token);
-export const getToken = () => localStorage.getItem(TOKEN_KEY);
+	sessionStorage.setItem(TOKEN_KEY, token);
+export const getToken = () => sessionStorage.getItem(TOKEN_KEY);
 
 export const apiClient = async (path: string, options: RequestInit = {}) => {
 	const token = getToken();

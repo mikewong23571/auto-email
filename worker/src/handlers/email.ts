@@ -1,6 +1,7 @@
 import PostalMime from "postal-mime";
 import { getDatabase, insertMessage } from "../db/client";
 import { sanitizeHtml, extractText } from "../utils/html";
+import { AppError } from "../utils/errors";
 import type { Message } from "../types";
 
 import type { ForwardableEmailMessage } from "@cloudflare/workers-types";
@@ -12,24 +13,13 @@ export const emailHandler = async (
 	ctx: ExecutionContext,
 ) => {
 	try {
-		const raw = message.raw; // ReadableStream
-		// postal-mime expects ArrayBuffer or similar?
-		// It handles readable stream in some versions, or we convert.
-		// Cloudflare message.raw is a stream.
-		// We can read it to ArrayBuffer.
+		const arrayBuffer = await readStreamToArrayBuffer(message.raw);
 
-		// Simplest: consume stream to ArrayBuffer
-		const chunks = [];
-		const reader = raw.getReader();
-		while (true) {
-			const { done, value } = await reader.read();
-			if (done) break;
-			chunks.push(value);
-		}
-		const blob = new Blob(chunks as BlobPart[]);
-		const arrayBuffer = await blob.arrayBuffer();
-
-		const parser = new PostalMime();
+		const parser = new PostalMime({
+			// Guard against deeply nested MIME parts / oversized headers
+			maxNestingDepth: 5,
+			maxHeadersSize: 256 * 1024,
+		});
 		const email = await parser.parse(arrayBuffer);
 
 		const id = crypto.randomUUID();
@@ -48,6 +38,10 @@ export const emailHandler = async (
 			body_html = sanitizeHtml(body_html);
 		}
 
+		if (!body_text && !body_html) {
+			throw new AppError(422, "No email body after parsing");
+		}
+
 		const msg: Message = {
 			id,
 			to_addr,
@@ -62,8 +56,37 @@ export const emailHandler = async (
 		await insertMessage(db, msg);
 	} catch (err) {
 		console.error("Error processing email:", err);
-		// Explicitly do not reject to avoid bouncing back to sender if possible,
-		// or reject if we want to signal failure.
-		// Usually for forwarders we might want to log only.
+		// Signal failure so the platform can surface the error; ensures bad
+		// messages don't get silently acknowledged.
+		throw err;
 	}
+};
+
+// Maximum accepted raw email size: 10MB
+const MAX_EMAIL_BYTES = 10 * 1024 * 1024;
+
+const readStreamToArrayBuffer = async (stream: ReadableStream) => {
+	const reader = stream.getReader();
+	const chunks: Uint8Array[] = [];
+	let total = 0;
+
+	while (true) {
+		const { done, value } = await reader.read();
+		if (done) break;
+		if (!value) continue;
+		total += value.byteLength;
+		if (total > MAX_EMAIL_BYTES) {
+			throw new AppError(413, "Email exceeds 10MB limit");
+		}
+		chunks.push(value);
+	}
+
+	const buffer = new Uint8Array(total);
+	let offset = 0;
+	for (const chunk of chunks) {
+		buffer.set(chunk, offset);
+		offset += chunk.byteLength;
+	}
+
+	return buffer.buffer;
 };

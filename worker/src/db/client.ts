@@ -92,3 +92,10 @@ export const getMessage = async (db: D1Database, id: string) => {
 export const deleteMessage = async (db: D1Database, id: string) => {
 	return db.prepare("DELETE FROM messages WHERE id = ?").bind(id).run();
 };
+
+export const deleteMessages = async (db: D1Database, ids: string[]) => {
+	if (ids.length === 0) return { changes: 0 };
+	const placeholders = ids.map(() => "?").join(", ");
+	const stmt = `DELETE FROM messages WHERE id IN (${placeholders})`;
+	return db.prepare(stmt).bind(...ids).run();
+};
