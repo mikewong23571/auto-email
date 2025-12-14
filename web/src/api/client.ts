@@ -5,6 +5,7 @@ const TOKEN_KEY = "mail_cleaner_token";
 export const setToken = (token: string) =>
 	sessionStorage.setItem(TOKEN_KEY, token);
 export const getToken = () => sessionStorage.getItem(TOKEN_KEY);
+export const clearToken = () => sessionStorage.removeItem(TOKEN_KEY);
 
 export const apiClient = async (path: string, options: RequestInit = {}) => {
 	const token = getToken();
@@ -26,6 +27,9 @@ export const apiClient = async (path: string, options: RequestInit = {}) => {
 	});
 
 	if (!res.ok) {
+		if (res.status === 401) {
+			clearToken();
+		}
 		throw new Error(`API Error: ${res.statusText}`);
 	}
 

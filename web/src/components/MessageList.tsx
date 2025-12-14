@@ -5,8 +5,12 @@ import type { Message } from "../api/types";
 
 export const MessageList = () => {
 	const [search, setSearch] = useState("");
+	const [toAddr, setToAddr] = useState("");
 	const [selectedId, setSelectedId] = useState<string | null>(null);
-	const { data: response, isLoading, error } = useMessages(search);
+	const { data: response, isLoading, error, isFetching } = useMessages(
+		search,
+		toAddr,
+	);
 	const deleteMutation = useDeleteMessage();
 
 	const messages = response?.data || [];
@@ -20,21 +24,32 @@ export const MessageList = () => {
 
 	if (error) return <div className="text-red-500">Error loading messages</div>;
 
-	return (
-		<div className="space-y-4">
-			<div className="flex gap-2">
-				<input
-					type="text"
-					placeholder="Search messages..."
-					className="flex-1 p-2 border rounded"
-					value={search}
-					onChange={(e) => setSearch(e.target.value)}
-				/>
-			</div>
+		return (
+			<div className="space-y-4">
+				<div className="flex flex-col gap-3 md:flex-row">
+					<input
+						type="email"
+						placeholder="Recipient email (required unless searching)"
+						className="flex-1 p-2 border rounded"
+						value={toAddr}
+						onChange={(e) => setToAddr(e.target.value)}
+					/>
+					<input
+						type="text"
+						placeholder="Search messages..."
+						className="flex-1 p-2 border rounded"
+						value={search}
+						onChange={(e) => setSearch(e.target.value)}
+					/>
+				</div>
 
-			{isLoading ? (
-				<div>Loading...</div>
-			) : (
+				{!search.trim() && !toAddr.trim() ? (
+					<div className="text-sm text-gray-500">
+						Enter a recipient email or a search keyword to load messages.
+					</div>
+				) : isLoading || isFetching ? (
+					<div>Loading...</div>
+				) : (
 				<div className="bg-white shadow rounded-lg overflow-hidden">
 					<ul className="divide-y divide-gray-200">
 						{messages.map((msg: Message) => (

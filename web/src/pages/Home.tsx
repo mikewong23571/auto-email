@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { MessageList } from "../components/MessageList";
-import { setToken, getToken } from "../api/client";
+import { setToken, getToken, clearToken } from "../api/client";
 
 export const Home = () => {
 	const [token, setUiToken] = useState(getToken() || "");
@@ -43,14 +43,14 @@ export const Home = () => {
 					<h1 className="text-3xl font-bold text-gray-800">
 						Cloudflare Mail Cleaner
 					</h1>
-					<button
-						type="button"
-						onClick={() => {
-							setToken("");
-							setIsAuthed(false);
-						}}
-						className="text-sm text-gray-500 hover:text-gray-700"
-					>
+						<button
+							type="button"
+							onClick={() => {
+								clearToken();
+								setIsAuthed(false);
+							}}
+							className="text-sm text-gray-500 hover:text-gray-700"
+						>
 						Logout
 					</button>
 				</div>

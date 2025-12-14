@@ -110,7 +110,12 @@ messages.delete("/:id", async (c) => {
 });
 
 messages.post("/batch-delete", async (c) => {
-	const body = await c.req.json();
+	let body: unknown;
+	try {
+		body = await c.req.json();
+	} catch {
+		throw new AppError(400, "Invalid JSON body");
+	}
 	const parsed = batchDeleteSchema.safeParse(body);
 
 	if (!parsed.success) {

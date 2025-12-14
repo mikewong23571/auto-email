@@ -3,12 +3,15 @@ import { apiClient } from "../api/client";
 import type { MessageListResponse, MessageDetailResponse } from "../api/types";
 
 export const useMessages = (search?: string, to?: string) => {
+	const enabled = Boolean(search?.trim() || to?.trim());
+
 	return useQuery<MessageListResponse>({
 		queryKey: ["messages", { search, to }],
+		enabled,
 		queryFn: () => {
 			const params = new URLSearchParams();
-			if (search) params.set("q", search);
-			if (to) params.set("to", to);
+			if (search?.trim()) params.set("q", search.trim());
+			if (to?.trim()) params.set("to", to.trim());
 			return apiClient(`/messages?${params.toString()}`);
 		},
 	});

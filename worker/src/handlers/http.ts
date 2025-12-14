@@ -18,6 +18,9 @@ app.onError((err, c) => {
 // Middleware for Auth
 app.use("/api/*", (c, next) => {
 	const token = c.env.API_TOKEN;
+	if (!token) {
+		return c.json({ error: "API token not configured" }, 500);
+	}
 	const auth = bearerAuth({ token });
 	return auth(c, next);
 });
