@@ -25,6 +25,7 @@ pnpm install
 
 ## API Access
 - Production API base: `https://auto-email.styleofwong.com/api`. CLI defaults to this URL unless `--base` or `API_BASE` overrides are provided.
+- CLI commands support `--json` to display any API response as pretty JSON (useful for scripting).
 
 ## Quality Checks (run from repo root)
 - Format: `pnpm format`

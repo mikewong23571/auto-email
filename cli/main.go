@@ -132,12 +132,13 @@ func main() {
 		offset := listFlags.Int("offset", 0, "Offset for pagination")
 		base := listFlags.String("base", baseEnv, "API base URL (e.g. http://localhost:8787/api)")
 		token := listFlags.String("token", tokenEnv, "Bearer token (defaults to API_TOKEN env)")
+		jsonOut := listFlags.Bool("json", false, "Output raw JSON response")
 		listFlags.Parse(os.Args[2:])
 
 		client := newClient(*base, *token)
 		requireToken(client.token)
 
-		if err := runList(client, *to, *q, *limit, *offset); err != nil {
+		if err := runList(client, *to, *q, *limit, *offset, *jsonOut); err != nil {
 			fail(err)
 		}
 	case "latest":
@@ -146,6 +147,7 @@ func main() {
 		n := latestFlags.Int("n", 5, "Number of messages (1-20)")
 		base := latestFlags.String("base", baseEnv, "API base URL")
 		token := latestFlags.String("token", tokenEnv, "Bearer token (defaults to API_TOKEN env)")
+		jsonOut := latestFlags.Bool("json", false, "Output raw JSON response")
 		latestFlags.Parse(os.Args[2:])
 
 		if *to == "" {
@@ -155,13 +157,14 @@ func main() {
 		client := newClient(*base, *token)
 		requireToken(client.token)
 
-		if err := runLatest(client, *to, *n); err != nil {
+		if err := runLatest(client, *to, *n, *jsonOut); err != nil {
 			fail(err)
 		}
 	case "get":
 		getFlags := flag.NewFlagSet("get", flag.ExitOnError)
 		base := getFlags.String("base", baseEnv, "API base URL")
 		token := getFlags.String("token", tokenEnv, "Bearer token (defaults to API_TOKEN env)")
+		jsonOut := getFlags.Bool("json", false, "Output raw JSON response")
 		getFlags.Parse(os.Args[2:])
 
 		if getFlags.NArg() != 1 {
@@ -172,13 +175,14 @@ func main() {
 		client := newClient(*base, *token)
 		requireToken(client.token)
 
-		if err := runGet(client, id); err != nil {
+		if err := runGet(client, id, *jsonOut); err != nil {
 			fail(err)
 		}
 	case "delete":
 		delFlags := flag.NewFlagSet("delete", flag.ExitOnError)
 		base := delFlags.String("base", baseEnv, "API base URL")
 		token := delFlags.String("token", tokenEnv, "Bearer token (defaults to API_TOKEN env)")
+		jsonOut := delFlags.Bool("json", false, "Output raw JSON response")
 		delFlags.Parse(os.Args[2:])
 
 		if delFlags.NArg() != 1 {
@@ -189,13 +193,14 @@ func main() {
 		client := newClient(*base, *token)
 		requireToken(client.token)
 
-		if err := runDelete(client, id); err != nil {
+		if err := runDelete(client, id, *jsonOut); err != nil {
 			fail(err)
 		}
 	case "batch-delete":
 		delFlags := flag.NewFlagSet("batch-delete", flag.ExitOnError)
 		base := delFlags.String("base", baseEnv, "API base URL")
 		token := delFlags.String("token", tokenEnv, "Bearer token (defaults to API_TOKEN env)")
+		jsonOut := delFlags.Bool("json", false, "Output raw JSON response")
 		delFlags.Parse(os.Args[2:])
 
 		if delFlags.NArg() == 0 {
@@ -209,7 +214,7 @@ func main() {
 		client := newClient(*base, *token)
 		requireToken(client.token)
 
-		if err := runBatchDelete(client, ids); err != nil {
+		if err := runBatchDelete(client, ids, *jsonOut); err != nil {
 			fail(err)
 		}
 	default:
@@ -218,7 +223,7 @@ func main() {
 	}
 }
 
-func runList(c *apiClient, to, q string, limit, offset int) error {
+func runList(c *apiClient, to, q string, limit, offset int, jsonOut bool) error {
 	params := url.Values{}
 	if to != "" {
 		params.Set("to", to)
@@ -232,6 +237,10 @@ func runList(c *apiClient, to, q string, limit, offset int) error {
 	var resp listResponse
 	if err := c.request(http.MethodGet, "/messages", params, nil, &resp); err != nil {
 		return err
+	}
+
+	if jsonOut {
+		return printJSON(resp)
 	}
 
 	fmt.Printf("Total: %d (limit %d offset %d)\n", resp.Total, resp.Limit, resp.Offset)
@@ -249,7 +258,7 @@ func runList(c *apiClient, to, q string, limit, offset int) error {
 	return nil
 }
 
-func runLatest(c *apiClient, to string, n int) error {
+func runLatest(c *apiClient, to string, n int, jsonOut bool) error {
 	params := url.Values{}
 	params.Set("to", to)
 	params.Set("n", fmt.Sprintf("%d", n))
@@ -259,16 +268,23 @@ func runLatest(c *apiClient, to string, n int) error {
 		return err
 	}
 
+	if jsonOut {
+		return printJSON(resp)
+	}
+
 	for _, m := range resp.Data {
 		fmt.Printf("- %s | %s | from:%s | subject: %s\n", m.ID, formatTime(m.ReceivedAt), m.From, m.Subject)
 	}
 	return nil
 }
 
-func runGet(c *apiClient, id string) error {
+func runGet(c *apiClient, id string, jsonOut bool) error {
 	var resp detailResponse
 	if err := c.request(http.MethodGet, "/messages/"+id, nil, nil, &resp); err != nil {
 		return err
+	}
+	if jsonOut {
+		return printJSON(resp)
 	}
 	m := resp.Data
 	fmt.Printf("ID: %s\nTo: %s\nFrom: %s\nReceived: %s\nSubject: %s\nHas HTML: %s\n\nText:\n%s\n",
@@ -279,19 +295,28 @@ func runGet(c *apiClient, id string) error {
 	return nil
 }
 
-func runDelete(c *apiClient, id string) error {
-	if err := c.request(http.MethodDelete, "/messages/"+id, nil, nil, nil); err != nil {
+func runDelete(c *apiClient, id string, jsonOut bool) error {
+	var resp map[string]any
+	if err := c.request(http.MethodDelete, "/messages/"+id, nil, nil, &resp); err != nil {
 		return err
 	}
+
+	if jsonOut {
+		return printJSON(resp)
+	}
+
 	fmt.Printf("Deleted message %s\n", id)
 	return nil
 }
 
-func runBatchDelete(c *apiClient, ids []string) error {
+func runBatchDelete(c *apiClient, ids []string, jsonOut bool) error {
 	payload := map[string]any{"ids": ids}
 	var resp deleteResponse
 	if err := c.request(http.MethodPost, "/messages/batch-delete", nil, payload, &resp); err != nil {
 		return err
+	}
+	if jsonOut {
+		return printJSON(resp)
 	}
 	fmt.Printf("Deleted %d message(s)\n", resp.Deleted)
 	return nil
@@ -309,7 +334,8 @@ Commands:
 
 Common flags:
   --base   API base URL (default: http://localhost:8787/api or $API_BASE)
-  --token  Bearer token (defaults to $API_TOKEN)`)
+  --token  Bearer token (defaults to $API_TOKEN)
+  --json   Print raw JSON response (where supported)`)
 }
 
 func requireToken(token string) {
@@ -343,6 +369,15 @@ func hasHTML(v int) string {
 		return "html+text"
 	}
 	return "text"
+}
+
+func printJSON(v any) error {
+	buf, err := json.MarshalIndent(v, "", "  ")
+	if err != nil {
+		return fmt.Errorf("marshal json: %w", err)
+	}
+	fmt.Println(string(buf))
+	return nil
 }
 
 func getenvDefault(key, fallback string) string {
