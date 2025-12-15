@@ -14,7 +14,7 @@ import (
 )
 
 const (
-	defaultBaseURL = "http://localhost:8787/api"
+	defaultBaseURL = "https://auto-email.styleofwong.com/api"
 )
 
 type message struct {

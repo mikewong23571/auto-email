@@ -23,6 +23,9 @@ pnpm install
 - Web client (Vite dev server): `pnpm --filter web dev`
 - Build web assets: `pnpm --filter web build` (outputs to `web/dist`, served by the Worker)
 
+## API Access
+- Production API base: `https://auto-email.styleofwong.com/api`. CLI defaults to this URL unless `--base` or `API_BASE` overrides are provided.
+
 ## Quality Checks (run from repo root)
 - Format: `pnpm format`
 - Lint: `pnpm lint`
