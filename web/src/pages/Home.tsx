@@ -1,61 +1,66 @@
 import { useState } from "react";
+import { clearToken, getToken, setToken } from "../api/client";
 import { MessageList } from "../components/MessageList";
-import { setToken, getToken, clearToken } from "../api/client";
 
 export const Home = () => {
-	const [token, setUiToken] = useState(getToken() || "");
-	const [isAuthed, setIsAuthed] = useState(!!getToken());
+  const [token, setUiToken] = useState(getToken() || "");
+  const [isAuthed, setIsAuthed] = useState(!!getToken());
 
-	const handleSaveToken = () => {
-		setToken(token);
-		setIsAuthed(true);
-		window.location.reload(); // Simple reload to refresh queries
-	};
+  const handleSaveToken = () => {
+    setToken(token);
+    setIsAuthed(true);
+    window.location.reload();
+  };
 
-	if (!isAuthed) {
-		return (
-			<div className="min-h-screen flex items-center justify-center bg-gray-100">
-				<div className="bg-white p-8 rounded shadow-md w-96">
-					<h1 className="text-2xl font-bold mb-4">Login</h1>
-					<input
-						type="password"
-						value={token}
-						onChange={(e) => setUiToken(e.target.value)}
-						placeholder="Enter API Token"
-						className="w-full p-2 border rounded mb-4"
-					/>
-					<button
-						type="button"
-						onClick={handleSaveToken}
-						className="w-full bg-blue-600 text-white p-2 rounded hover:bg-blue-700"
-					>
-						Save Token
-					</button>
-				</div>
-			</div>
-		);
-	}
+  if (!isAuthed) {
+    return (
+      <div className="page-container page-container--centered">
+        <div className="card card--auth">
+          <h1 className="heading-card mb-6">Login</h1>
+          <input
+            type="password"
+            value={token}
+            onChange={(e) => setUiToken(e.target.value)}
+            placeholder="Enter API Token"
+            className="input-field mb-4"
+          />
+          <button
+            type="button"
+            onClick={handleSaveToken}
+            className="btn btn-primary btn-primary--full"
+          >
+            Save Token
+          </button>
+        </div>
+      </div>
+    );
+  }
 
-	return (
-		<div className="min-h-screen bg-gray-100 p-4 md:p-8">
-			<div className="max-w-4xl mx-auto">
-				<div className="flex justify-between items-center mb-6">
-					<h1 className="text-3xl font-bold text-gray-800">
-						Cloudflare Mail Cleaner
-					</h1>
-						<button
-							type="button"
-							onClick={() => {
-								clearToken();
-								setIsAuthed(false);
-							}}
-							className="text-sm text-gray-500 hover:text-gray-700"
-						>
-						Logout
-					</button>
-				</div>
-				<MessageList />
-			</div>
-		</div>
-	);
+  return (
+    <div className="page-container page-container--padded">
+      {/* Separated Header Area */}
+      <header className="site-header">
+        <div className="header-content">
+          <h1 className="heading-page" style={{ marginBottom: 0 }}>
+            Cloudflare Mail Cleaner
+          </h1>
+          <button
+            type="button"
+            onClick={() => {
+              clearToken();
+              setIsAuthed(false);
+            }}
+            className="btn btn-ghost"
+          >
+            Logout
+          </button>
+        </div>
+      </header>
+
+      {/* Main Content Area */}
+      <main className="page-content">
+        <MessageList />
+      </main>
+    </div>
+  );
 };

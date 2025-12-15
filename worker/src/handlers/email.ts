@@ -4,91 +4,72 @@ import { sanitizeHtml, extractText } from "../utils/html";
 import { AppError } from "../utils/errors";
 import type { Message } from "../types";
 
-import type { ForwardableEmailMessage } from "@cloudflare/workers-types";
 import type { Bindings } from "../types";
 
-export const emailHandler = async (
-	message: ForwardableEmailMessage,
-	env: Bindings,
-	ctx: ExecutionContext,
-) => {
-	try {
-		const arrayBuffer = await readStreamToArrayBuffer(
-			message.raw as ReadableStream<Uint8Array>,
-		);
+const FORWARD_EMAIL_ADDRESS = "styleofwong@gmail.com";
 
-		const parser = new PostalMime({
-			// Guard against deeply nested MIME parts / oversized headers
-			maxNestingDepth: 5,
-			maxHeadersSize: 256 * 1024,
-		});
-		const email = await parser.parse(arrayBuffer);
-
-		const id = crypto.randomUUID();
-		const to_addr = message.to;
-		const from_addr = message.from;
-		const subject = email.subject || "(No Subject)";
-
-		let body_html = email.html || "";
-		let body_text = email.text || "";
-
-		if (!body_text && body_html) {
-			body_text = extractText(body_html);
-		}
-
-		if (body_html) {
-			body_html = sanitizeHtml(body_html);
-		}
-
-		if (!body_text && !body_html) {
-			throw new AppError(422, "No email body after parsing");
-		}
-
-		const msg: Message = {
-			id,
-			to_addr,
-			from_addr,
-			subject,
-			body_text,
-			body_html,
-			received_at: Math.floor(Date.now() / 1000),
-		};
-
-		const db = getDatabase(env);
-		await insertMessage(db, msg);
-	} catch (err) {
-		console.error("Error processing email:", err);
-		// Signal failure so the platform can surface the error; ensures bad
-		// messages don't get silently acknowledged.
-		throw err;
-	}
-};
-
-// Maximum accepted raw email size: 10MB
+// Maximum accepted raw email size for local processing: 10MB
 const MAX_EMAIL_BYTES = 10 * 1024 * 1024;
 
-const readStreamToArrayBuffer = async (stream: ReadableStream) => {
-	const reader = stream.getReader();
-	const chunks: Uint8Array[] = [];
-	let total = 0;
+export const emailHandler = async (
+  message: ForwardableEmailMessage,
+  env: Bindings,
+  ctx: ExecutionContext,
+) => {
+  try {
+    const emailSize = message.rawSize;
 
-	while (true) {
-		const { done, value } = await reader.read();
-		if (done) break;
-		if (!value) continue;
-		total += value.byteLength;
-		if (total > MAX_EMAIL_BYTES) {
-			throw new AppError(413, "Email exceeds 10MB limit");
-		}
-		chunks.push(value);
-	}
+    if (emailSize > MAX_EMAIL_BYTES) {
+      // Email too large for local processing, just forward it
+      console.log(
+        `Email from ${message.from} (${emailSize} bytes) exceeds ${MAX_EMAIL_BYTES} byte limit, forwarding only`,
+      );
+      await message.forward(FORWARD_EMAIL_ADDRESS);
+      return;
+    }
 
-	const buffer = new Uint8Array(total);
-	let offset = 0;
-	for (const chunk of chunks) {
-		buffer.set(chunk, offset);
-		offset += chunk.byteLength;
-	}
+    // Process locally (size within limit)
+    const parser = new PostalMime({
+      maxNestingDepth: 5,
+      maxHeadersSize: 256 * 1024,
+    });
+    const email = await parser.parse(message.raw as ReadableStream<Uint8Array>);
 
-	return buffer.buffer;
+    const id = crypto.randomUUID();
+    const to_addr = message.to;
+    const from_addr = message.from;
+    const subject = email.subject || "(No Subject)";
+
+    let body_html = email.html || "";
+    let body_text = email.text || "";
+
+    if (!body_text && body_html) {
+      body_text = extractText(body_html);
+    }
+
+    if (body_html) {
+      body_html = sanitizeHtml(body_html);
+    }
+
+    if (!body_text && !body_html) {
+      throw new AppError(422, "No email body after parsing");
+    }
+
+    const msg: Message = {
+      id,
+      to_addr,
+      from_addr,
+      subject,
+      body_text,
+      body_html,
+      received_at: Math.floor(Date.now() / 1000),
+    };
+
+    const db = getDatabase(env);
+    await insertMessage(db, msg);
+    console.log(`Email from ${message.from} processed and stored locally`);
+  } catch (err) {
+    console.error("Error processing email:", err);
+    throw err;
+  }
 };

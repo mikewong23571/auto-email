@@ -9,6 +9,7 @@ worker/dist/
 .env
 *.local
 wrangler.toml.local
+**/.wrangler/
 
 # Editor
 .DS_Store

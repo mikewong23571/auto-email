@@ -1,19 +1,37 @@
 name = "cloudflare-mail-cleaner"
 main = "src/index.ts"
-compatibility_date = "2024-04-01"
-
-# D1 Database Binding
-[[d1_databases]]
-binding = "DB"
-database_name = "mail_cleaner_db"
-database_id = "INSERT_DB_ID_HERE"
+tsconfig = "tsconfig.json"
+compatibility_date = "2025-12-01"
+compatibility_flags = ["nodejs_compat"]
+account_id = "b3c03e2f679658ac453eacdb31eae290"
+workers_dev = true
+assets = { directory = "../web/dist", binding = "ASSETS", not_found_handling = "single-page-application", run_worker_first = ["/api/*"] }
 
 [vars]
-# Default 30 day retention
+# Default 30 day retention. Keep API_TOKEN as a secret (wrangler secret put API_TOKEN).
 TTL_DAYS = 30
-# Auth token for API (Override in secrets)
-API_TOKEN = "dev_token_change_me"
+
+# Preview / staging (wrangler dev / wrangler deploy --env preview)
+[[d1_databases]]
+binding = "DB"
+database_name = "mail_cleaner_db_preview"
+database_id = "a632cf6b-cdda-4abf-ac9a-0d52e36a72c8"
+preview_database_id = "a632cf6b-cdda-4abf-ac9a-0d52e36a72c8"
+
+[env.production]
+# Optionally set a custom route, e.g. "mail-cleaner.example.com/*"
+# route = "REPLACE_WITH_ROUTE"
+name = "cloudflare-mail-cleaner"
+
+[[env.production.d1_databases]]
+binding = "DB"
+database_name = "mail_cleaner_db"
+database_id = "113da717-8623-44d6-9ef2-a77736a67a0c"
+preview_database_id = "113da717-8623-44d6-9ef2-a77736a67a0c"
+
+[env.production.vars]
+TTL_DAYS = 30
 
 [observability]
-enabled = true
+enabled = false
 head_sampling_rate = 1

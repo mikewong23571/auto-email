@@ -1,3 +1,7 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+@import "./design-tokens.css";
+@import "./components.css";
+
+/* Tell Tailwind where to scan for class names (v4 style) */
+@source "./index.html";
+@source "./src/**/*.{js,ts,jsx,tsx}";
