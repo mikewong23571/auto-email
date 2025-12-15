@@ -25,7 +25,7 @@ type message struct {
 	BodyText   string `json:"body_text"`
 	BodyHTML   string `json:"body_html"`
 	ReceivedAt int64  `json:"received_at"`
-	HasHTML    bool   `json:"has_html"`
+	HasHTML    int    `json:"has_html"`
 	Preview    string `json:"preview"`
 }
 
@@ -338,8 +338,8 @@ func trimPreview(s string, max int) string {
 	return s[:max-3] + "..."
 }
 
-func hasHTML(v bool) string {
-	if v {
+func hasHTML(v int) string {
+	if v > 0 {
 		return "html+text"
 	}
 	return "text"
