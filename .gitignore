@@ -4,6 +4,8 @@ node_modules/
 # Build outputs
 web/dist/
 worker/dist/
+cli/cli
+cli/cli.exe
 
 # Env & local config
 .env
