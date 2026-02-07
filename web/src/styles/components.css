@@ -279,6 +279,46 @@
   padding: var(--space-8);
 }
 
+.auth-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  margin-bottom: var(--space-6);
+}
+
+.auth-title {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+
+.input-with-actions .input-field {
+  padding-right: calc(var(--space-4) + 72px);
+}
+
+.input-actions-right {
+  position: absolute;
+  right: var(--space-2);
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.input-actions-right .btn-ghost-sm {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+}
+
 .card--list {
   overflow: hidden;
 }
