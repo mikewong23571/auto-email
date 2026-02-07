@@ -6,6 +6,7 @@ export const MessageSchema = z.object({
   from_addr: z.string().email(),
   subject: z.string().optional(),
   body_text: z.string().optional(),
+  body_text_clean: z.string().optional(),
   body_html: z.string().optional(),
   received_at: z.number(),
 });

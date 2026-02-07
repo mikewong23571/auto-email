@@ -6,6 +6,9 @@ web/dist/
 worker/dist/
 cli/cli
 cli/cli.exe
+cli/dist/
+cli/mailcli
+cli/mailcli.exe
 
 # Env & local config
 .env

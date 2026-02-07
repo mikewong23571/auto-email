@@ -32,3 +32,7 @@
 ## Security & Configuration Tips
 - Secrets stay in Wrangler (`wrangler secret put ...`); never commit tokens. `worker/wrangler.toml` references D1 DB IDs—avoid editing IDs unless rotating resources.
 - Keep `.wrangler/` local. If adding new env vars, mirror defaults in `[vars]` and document in `README.md`.
+
+## Environment Notes
+- This repo is configured so `preview` and `production` share the same D1 database (see `worker/wrangler.toml`).
+  This is intentional so both environments see the same historical messages.

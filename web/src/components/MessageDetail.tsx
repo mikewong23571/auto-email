@@ -1,4 +1,5 @@
 import { AtSign, Clock, Mail, User, X } from "lucide-react";
+import { Fragment, useMemo, useState } from "react";
 import { useMessage } from "../hooks/useMessages";
 
 interface Props {
@@ -9,6 +10,41 @@ interface Props {
 export const MessageDetail = ({ id, onClose }: Props) => {
   const { data: response, isLoading, error } = useMessage(id);
   const message = response?.data;
+
+  const [viewMode, setViewMode] = useState<"clean" | "html">("clean");
+
+  const hasHtml = Boolean(message?.body_html);
+
+  const cleanBlocks = useMemo(() => {
+    const rawText = (message?.body_text_clean || message?.body_text)?.trim() || "";
+    const normalized = rawText
+      .replace(/\r\n/g, "\n")
+      .replace(/\r/g, "\n")
+      .replace(/\u00a0/g, " ")
+      .replace(/\n{3,}/g, "\n\n")
+      .replace(/[ \t]+\n/g, "\n")
+      .replace(/\n[ \t]+/g, "\n")
+      .trim();
+
+    if (!normalized)
+      return [] as Array<
+        { key: string; type: "p"; lines: string[] } | { key: string; type: "ul"; items: string[] }
+      >;
+
+    const paragraphs = normalized.split(/\n{2,}/g).filter(Boolean);
+    return paragraphs.map((paragraph) => {
+      const lines = paragraph
+        .split("\n")
+        .map((l) => l.trim())
+        .filter(Boolean);
+      const isList = lines.length > 1 && lines.every((l) => /^[-*]\s+/.test(l));
+      if (isList) {
+        const items = lines.map((l) => l.replace(/^[-*]\s+/, ""));
+        return { key: paragraph, type: "ul" as const, items };
+      }
+      return { key: paragraph, type: "p" as const, lines };
+    });
+  }, [message?.body_text, message?.body_text_clean]);
 
   if (isLoading) return <div className="status-loading">Loading...</div>;
   if (error) return <div className="status-error">Error loading message</div>;
@@ -26,16 +62,50 @@ export const MessageDetail = ({ id, onClose }: Props) => {
   };
 
   const renderBody = () => {
-    if (message.body_html) {
+    if (viewMode === "html" && message.body_html) {
       return (
         <div
           className="message-body"
+          data-view="html"
           // biome-ignore lint/security/noDangerouslySetInnerHtml: Sanitized in backend
           dangerouslySetInnerHTML={{ __html: message.body_html }}
         />
       );
     }
-    return <pre className="message-body message-body--text">{message.body_text}</pre>;
+
+    if (cleanBlocks.length === 0) {
+      return (
+        <pre className="message-body message-body--text">
+          {message.body_text_clean || message.body_text}
+        </pre>
+      );
+    }
+
+    return (
+      <div className="message-body">
+        {cleanBlocks.map((block) => {
+          if (block.type === "ul") {
+            return (
+              <ul key={block.key}>
+                {block.items.map((item) => (
+                  <li key={item}>{item}</li>
+                ))}
+              </ul>
+            );
+          }
+          return (
+            <p key={block.key}>
+              {block.lines.map((line, lineIdx) => (
+                <Fragment key={line}>
+                  {lineIdx > 0 ? <br /> : null}
+                  {line}
+                </Fragment>
+              ))}
+            </p>
+          );
+        })}
+      </div>
+    );
   };
 
   return (
@@ -54,9 +124,31 @@ export const MessageDetail = ({ id, onClose }: Props) => {
             <Mail size={20} className="modal-header-icon" />
             <h2 className="modal-title">{message.subject || "(No Subject)"}</h2>
           </div>
-          <button type="button" onClick={onClose} className="btn btn-close" aria-label="Close">
-            <X size={20} />
-          </button>
+          <div className="modal-header-right">
+            <fieldset className="view-toggle" aria-label="Message view">
+              <button
+                type="button"
+                onClick={() => setViewMode("clean")}
+                className={`view-toggle-btn ${viewMode === "clean" ? "active" : ""}`}
+                aria-pressed={viewMode === "clean"}
+              >
+                Clean
+              </button>
+              <button
+                type="button"
+                onClick={() => setViewMode("html")}
+                disabled={!hasHtml}
+                className={`view-toggle-btn ${viewMode === "html" ? "active" : ""}`}
+                aria-pressed={viewMode === "html"}
+              >
+                HTML
+              </button>
+            </fieldset>
+
+            <button type="button" onClick={onClose} className="btn btn-close" aria-label="Close">
+              <X size={20} />
+            </button>
+          </div>
         </div>
         <div className="modal-meta">
           <div className="modal-meta-grid">

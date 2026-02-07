@@ -4,6 +4,7 @@ export interface Message {
   from_addr: string;
   subject: string;
   body_text?: string;
+  body_text_clean?: string;
   body_html?: string;
   received_at: number;
   has_html?: boolean;

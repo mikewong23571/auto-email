@@ -1,4 +1,4 @@
-name = "cloudflare-mail-cleaner"
+name = "mailbox-preview"
 main = "src/index.ts"
 tsconfig = "tsconfig.json"
 compatibility_date = "2025-12-01"
@@ -21,13 +21,14 @@ preview_database_id = "a632cf6b-cdda-4abf-ac9a-0d52e36a72c8"
 [env.production]
 # Optionally set a custom route, e.g. "mail-cleaner.example.com/*"
 # route = "REPLACE_WITH_ROUTE"
-name = "cloudflare-mail-cleaner"
+name = "mailbox"
+routes = [{ pattern = "mailbox.styleofwong.com", custom_domain = true }]
 
 [[env.production.d1_databases]]
 binding = "DB"
 database_name = "mail_cleaner_db"
-database_id = "113da717-8623-44d6-9ef2-a77736a67a0c"
-preview_database_id = "113da717-8623-44d6-9ef2-a77736a67a0c"
+database_id = "a632cf6b-cdda-4abf-ac9a-0d52e36a72c8"
+preview_database_id = "a632cf6b-cdda-4abf-ac9a-0d52e36a72c8"
 
 [env.production.vars]
 TTL_DAYS = 30

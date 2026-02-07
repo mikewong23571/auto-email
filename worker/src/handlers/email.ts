@@ -1,6 +1,6 @@
 import PostalMime from "postal-mime";
 import { getDatabase, insertMessage } from "../db/client";
-import { sanitizeHtml, extractText } from "../utils/html";
+import { buildBodyTextClean, extractText, sanitizeHtml } from "../utils/html";
 import { AppError } from "../utils/errors";
 import type { Message } from "../types";
 
@@ -40,16 +40,16 @@ export const emailHandler = async (
     const from_addr = message.from;
     const subject = email.subject || "(No Subject)";
 
-    let body_html = email.html || "";
-    let body_text = email.text || "";
+    const body_html = email.html ? sanitizeHtml(email.html) : "";
+    const parsed_body_text = email.text || "";
 
-    if (!body_text && body_html) {
-      body_text = extractText(body_html);
-    }
+    // Keep legacy `body_text` (best-effort) for compatibility.
+    const body_text = parsed_body_text ? parsed_body_text : body_html ? extractText(body_html) : "";
 
-    if (body_html) {
-      body_html = sanitizeHtml(body_html);
-    }
+    const body_text_clean = await buildBodyTextClean({
+      plainText: parsed_body_text,
+      sanitizedHtml: body_html,
+    });
 
     if (!body_text && !body_html) {
       throw new AppError(422, "No email body after parsing");
@@ -61,6 +61,7 @@ export const emailHandler = async (
       from_addr,
       subject,
       body_text,
+      body_text_clean,
       body_html,
       received_at: Math.floor(Date.now() / 1000),
     };

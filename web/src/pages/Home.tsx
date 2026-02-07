@@ -42,7 +42,7 @@ export const Home = () => {
       <header className="site-header">
         <div className="header-content">
           <h1 className="heading-page" style={{ marginBottom: 0 }}>
-            Cloudflare Mail Cleaner
+            Mailbox
           </h1>
           <button
             type="button"

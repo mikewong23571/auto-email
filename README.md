@@ -1,4 +1,4 @@
-# Cloudflare Mail Cleaner
+# Mailbox
 
 Full-stack app that ingests email via a Cloudflare Worker, stores metadata in D1, and serves a React (Vite) UI for browsing and cleaning messages.
 
@@ -24,8 +24,19 @@ pnpm install
 - Build web assets: `pnpm --filter web build` (outputs to `web/dist`, served by the Worker)
 
 ## API Access
-- Production API base: `https://auto-email.styleofwong.com/api`. CLI defaults to this URL unless `--base` or `API_BASE` overrides are provided.
+- Production API base: `https://mailbox.styleofwong.com/api`. The Go CLI defaults to this URL unless `--base` or `API_BASE` overrides are provided.
 - CLI commands support `--json` to display any API response as pretty JSON (useful for scripting).
+
+## Go CLI (Linux build)
+
+Build Linux binaries with CGO disabled:
+
+```bash
+cd cli
+./build-linux.sh
+```
+
+Artifacts are written to `cli/dist/`.
 
 ## Quality Checks (run from repo root)
 - Format: `pnpm format`
@@ -34,8 +45,9 @@ pnpm install
 - Tests (vitest): `pnpm test`
 
 ## Deployment
-1) Set secrets (example): `cd worker && wrangler secret put API_TOKEN`
-2) Deploy preview/prod: `pnpm --filter worker deploy` (add `--env production` for prod)
+1) Build web assets: `pnpm --filter web build`
+2) Set secrets (example): `cd worker && wrangler secret put API_TOKEN`
+3) Deploy preview/prod: `pnpm --filter worker deploy` (add `--env production` for prod)
 
 ## Notes
 - Local Cloudflare state is ignored via `.gitignore` (`.wrangler/`), so preview DB files stay local.

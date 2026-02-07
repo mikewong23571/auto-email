@@ -1,5 +1,6 @@
 import { Hono } from "hono";
 import { bearerAuth } from "hono/bearer-auth";
+import { HTTPException } from "hono/http-exception";
 import messages from "../routes/messages";
 import type { Bindings } from "../types";
 import { AppError, isAppError } from "../utils/errors";
@@ -10,6 +11,11 @@ const app = new Hono<{ Bindings: Bindings }>();
 // Global Error handling
 app.onError((err, c) => {
   console.error("App Error:", err);
+
+  // Let Hono's HTTPException (e.g. auth failures) return its embedded response.
+  if (err instanceof HTTPException) {
+    return err.getResponse();
+  }
   if (isAppError(err)) {
     return c.json({ error: err.message }, err.status as ContentfulStatusCode);
   }

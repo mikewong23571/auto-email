@@ -14,7 +14,7 @@ import (
 )
 
 const (
-	defaultBaseURL = "https://auto-email.styleofwong.com/api"
+	defaultBaseURL = "https://mailbox.styleofwong.com/api"
 )
 
 type message struct {
@@ -115,11 +115,19 @@ func (c *apiClient) request(method, path string, query url.Values, body any, out
 
 func main() {
 	if len(os.Args) < 2 {
-		usage()
+		usageRoot()
 		os.Exit(1)
 	}
 
 	cmd := os.Args[1]
+	if cmd == "-h" || cmd == "--help" || cmd == "help" {
+		if len(os.Args) >= 3 {
+			usageCommand(os.Args[2])
+			return
+		}
+		usageRoot()
+		return
+	}
 	baseEnv := getenvDefault("API_BASE", defaultBaseURL)
 	tokenEnv := os.Getenv("API_TOKEN")
 
@@ -218,7 +226,7 @@ func main() {
 			fail(err)
 		}
 	default:
-		usage()
+		usageRoot()
 		os.Exit(1)
 	}
 }
@@ -322,8 +330,12 @@ func runBatchDelete(c *apiClient, ids []string, jsonOut bool) error {
 	return nil
 }
 
-func usage() {
-	fmt.Println(`Usage: mailcli <command> [options]
+func usageRoot() {
+	fmt.Println(`Mailbox CLI
+
+Usage:
+  mailcli <command> [options]
+  mailcli help [command]
 
 Commands:
   list           List messages (supports --to, --q, --limit, --offset)
@@ -332,10 +344,99 @@ Commands:
   delete         Delete one message by id
   batch-delete   Delete multiple messages by ids
 
-Common flags:
-  --base   API base URL (default: http://localhost:8787/api or $API_BASE)
-  --token  Bearer token (defaults to $API_TOKEN)
-  --json   Print raw JSON response (where supported)`)
+Auth:
+  Token is required. Set $API_TOKEN or pass --token.
+
+Base URL:
+  Default base is https://mailbox.styleofwong.com/api
+  Override via --base or $API_BASE
+
+Examples:
+  mailcli list --to you@example.com
+  mailcli list --to you@example.com --q invoice
+  mailcli latest --to you@example.com --n 5
+  mailcli get <message_id>
+  mailcli delete <message_id>
+  mailcli batch-delete <id1> <id2> <id3>
+
+Run 'mailcli help <command>' to see command-specific options.`)
+}
+
+func usageCommand(command string) {
+	switch command {
+	case "list":
+		fmt.Println(`Usage: mailcli list [options]
+
+List messages.
+
+Options:
+  --to EMAIL      Filter by recipient email
+  --q QUERY       Full-text search query
+  --limit N       Max results (1-100) (default: 20)
+  --offset N      Offset for pagination (default: 0)
+  --base URL      API base URL (default: $API_BASE or https://mailbox.styleofwong.com/api)
+  --token TOKEN   Bearer token (default: $API_TOKEN)
+  --json          Output raw JSON response
+
+Examples:
+  mailcli list --to you@example.com
+  mailcli list --to you@example.com --q invoice --limit 10
+  mailcli list --to you@example.com --json`)
+	case "latest":
+		fmt.Println(`Usage: mailcli latest [options]
+
+Show latest messages for a recipient.
+
+Options:
+  --to EMAIL      Recipient email (required)
+  --n N           Number of messages (1-20) (default: 5)
+  --base URL      API base URL (default: $API_BASE or https://mailbox.styleofwong.com/api)
+  --token TOKEN   Bearer token (default: $API_TOKEN)
+  --json          Output raw JSON response
+
+Examples:
+  mailcli latest --to you@example.com
+  mailcli latest --to you@example.com --n 10`)
+	case "get":
+		fmt.Println(`Usage: mailcli get [options] <message_id>
+
+Fetch full message by id.
+
+Options:
+  --base URL      API base URL (default: $API_BASE or https://mailbox.styleofwong.com/api)
+  --token TOKEN   Bearer token (default: $API_TOKEN)
+  --json          Output raw JSON response
+
+Examples:
+  mailcli get 01J...
+  mailcli get --json 01J...`)
+	case "delete":
+		fmt.Println(`Usage: mailcli delete [options] <message_id>
+
+Delete one message by id.
+
+Options:
+  --base URL      API base URL (default: $API_BASE or https://mailbox.styleofwong.com/api)
+  --token TOKEN   Bearer token (default: $API_TOKEN)
+  --json          Output raw JSON response
+
+Example:
+  mailcli delete 01J...`)
+	case "batch-delete":
+		fmt.Println(`Usage: mailcli batch-delete [options] <id1> <id2> ...
+
+Delete multiple messages by ids (max 100).
+
+Options:
+  --base URL      API base URL (default: $API_BASE or https://mailbox.styleofwong.com/api)
+  --token TOKEN   Bearer token (default: $API_TOKEN)
+  --json          Output raw JSON response
+
+Example:
+  mailcli batch-delete 01J... 01J... 01J...`)
+	default:
+		usageRoot()
+	}
 }
 
 func requireToken(token string) {
