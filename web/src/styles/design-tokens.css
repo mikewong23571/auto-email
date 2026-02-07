@@ -103,6 +103,15 @@
   --space-16: 4rem;
   /* 64px */
 
+  /* === Layout === */
+  /*
+    Reasonable default content width for large monitors.
+    80rem = 1280px, common “screen-xl” container width.
+  */
+  --container-max: 80rem;
+  /* Fluid horizontal padding that scales with viewport size. */
+  --container-pad: clamp(1rem, 3vw, 2rem);
+
   /* === Border Radius - More rounded for modern feel === */
   --radius-sm: 0.5rem;
   /* 8px */
