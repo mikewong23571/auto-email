@@ -277,6 +277,22 @@
   width: 100%;
   max-width: 24rem;
   padding: var(--space-8);
+  position: relative;
+  overflow: hidden;
+}
+
+.card--auth::before {
+  content: "";
+  position: absolute;
+  inset: -2px;
+  background: radial-gradient(circle at top, rgba(14, 165, 233, 0.18), transparent 50%),
+    radial-gradient(circle at bottom, rgba(139, 92, 246, 0.16), transparent 55%);
+  opacity: 0.9;
+  pointer-events: none;
+}
+
+.card--auth > * {
+  position: relative;
 }
 
 .auth-header {
@@ -398,6 +414,11 @@
   transition: all var(--transition-base);
 }
 
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 .btn:focus-visible {
   outline: none;
   box-shadow: 0 0 0 2px var(--color-bg-page), 0 0 0 4px var(--color-accent);
@@ -418,6 +439,17 @@
 
 .btn-primary:active {
   transform: translateY(0);
+}
+
+.btn-primary:disabled,
+.btn-primary:disabled:hover {
+  background: rgba(14, 165, 233, 0.55);
+  transform: none;
+  box-shadow: none;
+}
+
+.btn-primary--full {
+  width: 100%;
 }
 
 .btn-ghost {
@@ -1035,6 +1067,11 @@
 .btn-ghost-sm:hover {
   color: var(--color-text-primary);
   background: var(--color-bg-surface-hover);
+}
+
+.btn-ghost-sm:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
 }
 
 /* === Combobox / Input Suggestions === */
