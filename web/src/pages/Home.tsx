@@ -57,66 +57,80 @@ export const Home = () => {
 
   if (!isAuthed) {
     return (
-      <div className="page-container page-container--centered">
-        <div className="card card--auth">
-          <div className="auth-header">
-            <div className="auth-title">
-              <h1 className="heading-card" style={{ margin: 0 }}>
-                Mailbox
-              </h1>
-              <p className="text-body" style={{ margin: 0 }}>
-                Enter API token to continue.
-              </p>
-            </div>
+      <div className="page-container page-container--padded">
+        <header className="site-header">
+          <div className="header-content">
+            <h1 className="heading-page" style={{ marginBottom: 0 }}>
+              Mailbox
+            </h1>
+            <span className="text-meta">Login</span>
           </div>
+        </header>
 
-          <form
-            className="auth-form"
-            onSubmit={(e) => {
-              e.preventDefault();
-              handleSaveToken();
-            }}
-          >
-            <div className="input-group">
-              <div className="text-label">API Token</div>
-              <div className="input-with-icon input-with-actions">
-                <KeyRound className="input-icon" size={18} />
-                <input
-                  type={showToken ? "text" : "password"}
-                  value={token}
-                  onChange={(e) => setUiToken(e.target.value)}
-                  placeholder="Paste your token here"
-                  className={`input-field ${error ? "input-field--error" : ""}`}
-                />
-                <div className="input-actions-right">
-                  <button
-                    type="button"
-                    className="btn-ghost-sm"
-                    onClick={() => setShowToken((v) => !v)}
-                    aria-label={showToken ? "Hide token" : "Show token"}
-                  >
-                    {showToken ? <EyeOff size={16} /> : <Eye size={16} />}
-                  </button>
-                  <button
-                    type="button"
-                    className="btn-ghost-sm"
-                    onClick={handlePasteToken}
-                    disabled={!canPaste}
-                    aria-label="Paste token"
-                  >
-                    <ClipboardPaste size={16} />
-                  </button>
-                </div>
+        <main className="page-content page-content--auth">
+          <div className="card card--auth">
+            <div className="auth-header">
+              <div className="auth-title">
+                <h2 className="heading-card" style={{ margin: 0 }}>
+                  API Token
+                </h2>
+                <p className="text-body" style={{ margin: 0 }}>
+                  Enter token to continue.
+                </p>
               </div>
-              {error ? <div className="text-error text-xs mt-1">{error}</div> : null}
-              <div className="status-hint">Token is stored in this browser session only.</div>
             </div>
 
-            <button type="submit" disabled={isSaving} className="btn btn-primary btn-primary--full">
-              {isSaving ? "Validating..." : "Continue"}
-            </button>
-          </form>
-        </div>
+            <form
+              className="auth-form"
+              onSubmit={(e) => {
+                e.preventDefault();
+                handleSaveToken();
+              }}
+            >
+              <div className="input-group">
+                <div className="input-with-icon input-with-actions">
+                  <KeyRound className="input-icon" size={18} />
+                  <input
+                    type={showToken ? "text" : "password"}
+                    value={token}
+                    onChange={(e) => setUiToken(e.target.value)}
+                    placeholder="Paste your token here"
+                    className={`input-field ${error ? "input-field--error" : ""}`}
+                  />
+                  <div className="input-actions-right">
+                    <button
+                      type="button"
+                      className="btn-ghost-sm"
+                      onClick={() => setShowToken((v) => !v)}
+                      aria-label={showToken ? "Hide token" : "Show token"}
+                    >
+                      {showToken ? <EyeOff size={16} /> : <Eye size={16} />}
+                    </button>
+                    <button
+                      type="button"
+                      className="btn-ghost-sm"
+                      onClick={handlePasteToken}
+                      disabled={!canPaste}
+                      aria-label="Paste token"
+                    >
+                      <ClipboardPaste size={16} />
+                    </button>
+                  </div>
+                </div>
+                {error ? <div className="text-error text-xs mt-1">{error}</div> : null}
+                <div className="status-hint">Token is stored in this browser session only.</div>
+              </div>
+
+              <button
+                type="submit"
+                disabled={isSaving}
+                className="btn btn-primary btn-primary--full"
+              >
+                {isSaving ? "Validating..." : "Continue"}
+              </button>
+            </form>
+          </div>
+        </main>
       </div>
     );
   }
